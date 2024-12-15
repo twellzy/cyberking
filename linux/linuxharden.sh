@@ -40,7 +40,7 @@ function userAudit(){
             userdel -f $user
 
         else
-            echo -e "$user: Cyb3rP@triot1234!" >> ./res/passwords.txt
+            echo -e "$user:Cyb3rP@triot1234!" >> ./res/passwords.txt
         fi
 
     done < ./res/all_users.txt
@@ -133,6 +133,23 @@ function removeBadPackages(){
     apt-get purge --auto-remove wapiti -qq
     apt-get purge --auto-remove zenmap -qq
     apt-get purge --auto-remove openvpn -qq
+    apt-get purge --auto-remove vuze -qq
+    apt-get purge --auto-remove frostwire -qq
+    apt-get purge --auto-remove medusa -qq
+    apt-get purge --auto-remove remmina -qq
+    apt-get purge --auto-remove rdesktop -qq
+    apt-get purge --auto-remove tightvncserver -qq
+    apt-get purge --auto-remove vino -qq
+    apt-get purge --auto-remove vinagre -qq
+    apt-get purge --auto-remove knocker -qq
+    apt-get purge --auto-remove minetest -qq
+}
+
+
+
+function disableBadServices(){
+    systemctl stop smtp
+    systemctl disable smtp
 }
 
 
@@ -148,11 +165,16 @@ function fixFilePerms(){
 
     chmod 0640 /etc/pam.d/common-password
     chmod 0640 /etc/pam.d/common-auth
+
+    chmod 0644 /etc/vsftpd.conf
+    chmod 0644 /etc/pam.conf
 }
 
 
 
 function enableUFW(){
+    apt install ufw
+
     ufw enable
     ufw logging high
 }
@@ -226,12 +248,76 @@ function securePAM(){
         cp /etc/pam.d/system-auth /etc/pam.d/system-auth.bak
         cp ./configs/pam/system-auth /etc/pam.d/system-auth
     fi
-
-    touch /etc/nologin
 }
 
 
 
+function disableRootLogin(){
+    passwd -l root
+}
 
 
 
+echo "[+] Auditing Users"
+userAudit
+
+echo "[+] Removing Bad Packages"
+removeBadPackages
+
+echo "[+] Fixing shadow and config file perms"
+fixFilePerms
+
+echo "[+] Enabling UFW"
+enableUFW
+
+echo "[+] Disabling bad services"
+disableBadServices
+
+read -p "Is SSH a critical service (Y/N)" action
+if [ $action = 'y' -o $action = 'Y' ]; then
+    echo "[+] Starting SSH"
+    startSSH
+
+else
+    systemctl disable ssh
+    systemctl stop ssh
+fi
+
+
+read -p "Is vsftpd a critical service (Y/N)" action
+if [ $action = 'y' -o $action = 'Y' ]; then
+    echo "[+] Starting vsftpd"
+    startFTP
+
+else
+    systemctl disable vsftpd
+    systemctl stop vsftpd
+fi
+
+
+read -p "Is Nginx a critical service (Y/N)" action
+if [ $action = 'y' -o $action = 'Y' ]; then
+    echo "[+] Starting Nginx"
+    startNginx
+
+else
+    systemctl disable nginx
+    systemctl stop nginx
+fi
+
+
+read -p "Is Apache2 a critical service (Y/N)" action
+if [ $action = 'y' -o $action = 'Y' ]; then
+    echo "[+] starting Apache2"
+    startApache2
+else
+    systemctl disable apache2
+    systemctl stop apache2
+fi
+
+
+echo "[+] Securing PAM"
+securePAM
+
+echo "[+] Disabling root login"
+disableRootLogin
