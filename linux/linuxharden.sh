@@ -28,6 +28,7 @@ function userAudit(){
         if [ $? -eq 1 ]; then
             deluser $user adm
             deluser $user sudo
+            deluser $user shadow
         fi
 
         grep $user ./res/authed_users.txt > /dev/null
@@ -35,12 +36,9 @@ function userAudit(){
             #remove user's cronjobs
             crontab -u $user -r
 
-            #remove user's processes
-            killall -u $user
-
             #delete the user
             userdel -f $user
-            
+
         else
             echo -e "$user: Cyb3rP@triot1234!" >> ./res/passwords.txt
         fi
@@ -50,4 +48,190 @@ function userAudit(){
     chpasswd < ./res/passwords.txt
 }
 
-userAudit
+
+
+function removeBadPackages(){
+    apt-get purge --auto-remove netcat -qq
+    apt-get purge --auto-remove netcat-openbsd -qq
+    apt-get purge --auto-remove netcat-traditional -qq
+    apt-get purge --auto-remove ncat -qq
+    apt-get purge --auto-remove pnetcat -qq
+    apt-get purge --auto-remove socat -qq
+    apt-get purge --auto-remove sock -qq
+    apt-get purge --auto-remove socket -qq
+    apt-get purge --auto-remove sbd -qq
+    apt-get purge --auto-remove john -qq
+    apt-get purge --auto-remove john-data -qq
+    apt-get purge --auto-remove hydra -qq
+    apt-get purge --auto-remove hydra-gtk -qq
+    apt-get purge --auto-remove aircrack-ng -qq
+    apt-get purge --auto-remove fcrackzip -qq
+    apt-get purge --auto-remove lcrack -qq
+    apt-get purge --auto-remove ophcrack -qq
+    apt-get purge --auto-remove ophcrack-cli -qq
+    apt-get purge --auto-remove pdfcrack -qq
+    apt-get purge --auto-remove pyrit -qq
+    apt-get purge --auto-remove rarcrack -qq
+    apt-get purge --auto-remove sipcrack -qq
+    apt-get purge --auto-remove irpas -qq
+    apt-get purge --auto-remove logkeys -qq
+    apt-get purge --auto-remove zeitgeist-core -qq
+    apt-get purge --auto-remove zeitgeist-datahub -qq
+    apt-get purge --auto-remove python-zeitgeist -qq
+    apt-get purge --auto-remove rhythmbox-plugin-zeitgeist -qq
+    apt-get purge --auto-remove zeitgeist -qq
+    apt-get purge --auto-remove nfs-kernel-server -qq
+    apt-get purge --auto-remove nfs-common -qq
+    apt-get purge --auto-remove portmap -qq
+    apt-get purge --auto-remove rpcbind -qq
+    apt-get purge --auto-remove autofs -qq
+    apt-get purge --auto-remove inetd -qq
+    apt-get purge --auto-remove openbsd-inetd -qq
+    apt-get purge --auto-remove xinetd -qq
+    apt-get purge --auto-remove inetutils-ftp -qq
+    apt-get purge --auto-remove inetutils-ftpd -qq
+    apt-get purge --auto-remove inetutils-inetd -qq
+    apt-get purge --auto-remove inetutils-ping -qq
+    apt-get purge --auto-remove inetutils-syslogd -qq
+    apt-get purge --auto-remove inetutils-talk -qq
+    apt-get purge --auto-remove inetutils-talkd -qq
+    apt-get purge --auto-remove inetutils-telnet -qq
+    apt-get purge --auto-remove inetutils-telnetd -qq
+    apt-get purge --auto-remove inetutils-tools -qq
+    apt-get purge --auto-remove inetutils-traceroute -qq
+    apt-get purge --auto-remove vnc4server -qq
+    apt-get purge --auto-remove vncsnapshot -qq
+    apt-get purge --auto-remove vtgrab -qq
+    apt-get purge --auto-remove snmp -qq
+    apt-get purge --auto-remove nmapsi4 -qq
+    apt-get purge --auto-remove amule -qq
+    apt-get purge --auto-remove zangband -qq
+    apt-get purge --auto-remove pumpa -qq
+    apt-get purge --auto-remove pompem -qq
+    apt-get purge --auto-remove goldeneye -qq
+    apt-get purge --auto-remove themole -qq
+    apt-get purge --auto-remove ftpscan -qq
+    apt-get purge --auto-remove ftpsearch -qq
+    apt-get purge --auto-remove 4g8 -qq
+	apt-get purge --auto-remove inetutils-telnetd -y -qq
+    apt-get purge --auto-remove dsniff -y -qq
+    apt-get purge --auto-remove linuxdcpp -y -qq
+    apt-get purge --auto-remove rfdump -y -qq
+    apt-get purge --auto-remove heartbleeder -y -qq
+    apt-get purge --auto-remove cupp3 -y -qq
+    apt-get purge --auto-remove cmospwd -y -qq
+    apt-get purge --auto-remove fcrackzip -y -qq
+    apt-get purge --auto-remove freeciv -qq
+    apt-get purge --auto-remove nmap -qq
+    apt-get purge --auto-remove tcpspray -qq
+    apt-get purge --auto-remove dsniff -qq
+    apt-get purge --auto-remove wireshark -qq
+    apt-get purge --auto-remove endless-sky -qq
+    apt-get purge --auto-remove hunt -qq
+    apt-get purge --auto-remove ettercap-common -qq
+    apt-get purge --auto-remove chntpw -qq
+    apt-get purge --auto-remove wapiti -qq
+    apt-get purge --auto-remove zenmap -qq
+    apt-get purge --auto-remove openvpn -qq
+}
+
+
+
+function fixFilePerms(){
+    chmod 0644 /etc/passwd
+    chmod 0640 /etc/shadow
+    chmod 0640 /etc/shadow-
+
+    chmod 0644 /etc/group
+    chmod 0640 /etc/gshadow
+    chmod 0640 /etc/gshadow-
+
+    chmod 0640 /etc/pam.d/common-password
+    chmod 0640 /etc/pam.d/common-auth
+}
+
+
+
+function enableUFW(){
+    ufw enable
+    ufw logging high
+}
+
+
+
+function startSSH(){
+    ufw allow ssh
+
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+    cp ./configs/OpenSSH/sshd_config /etc/ssh/sshd_config
+
+    cp /etc/pam.d/sshd /etc/pam.d/sshd.bak
+    cp ./configs/OpenSSH/sshd /etc/pam.d/sshd
+
+    systemctl restart ssh
+    systemctl enable ssh
+}
+
+
+
+function startFTP(){
+    ufw allow vsftpd
+
+    cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
+    cp ./configs/vsftpd/vsftpd.conf /etc/vsftpd.conf
+
+    systemctl restart vsftpd
+    systemctl enable vsftpd
+}
+
+
+
+function startNginx(){
+    systemctl stop nginx
+
+    tar -czvf nginx_$(date +'%F_%H-%M-%S').tar.gz /etc/nginx/*
+    apt install --reinstall nginx -yqq
+
+    mv ./configs/nginx/nginxconfig.io-example.com.tar.gz /etc
+    tar -xzvf ./configs/nginx/nginxconfig.io-example.com.tar.gz -C /etc | xargs chmod 0644
+    mv /etc/nginxconfig.io-example.com /etc/nginx
+
+    systemctl restart nginx
+    systemctl enable nginx
+}
+
+
+
+function startApache2(){
+    cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
+    cp ./configs/apache2/apache2.conf /etc/apache2/apache2.conf
+
+    systemctl restart apache2
+    systemctl enable apache2
+}
+
+
+
+function securePAM(){
+    cp /etc/login.defs /etc/login.defs.bak
+    cp ./configs/pam/login.defs /etc/login.defs
+
+    cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
+    cp ./configs/pam/common-auth /etc/pam.d/common-auth
+
+    cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
+    cp ./configs/pam/common-password /etc/pam.d/common-password
+
+    if [ -e '/etc/pam.d/system-auth' ]; then
+        cp /etc/pam.d/system-auth /etc/pam.d/system-auth.bak
+        cp ./configs/pam/system-auth /etc/pam.d/system-auth
+    fi
+
+    touch /etc/nologin
+}
+
+
+
+
+
+
