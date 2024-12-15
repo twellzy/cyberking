@@ -1,19 +1,19 @@
 function userAudit(){
     #check which scoring engine is used
-    if [ -f '/opt/CyberPatriot/README.desktop' ]; then
+    if [ -e '/opt/CyberPatriot/README.desktop' ]; then
         url=$(cat /opt/CyberPatriot/README.desktop | grep -oP 'https?://[^"]+')
+        curl $url > ./res/readme.html
     fi
 
-    if [ -f '/opt/aeacus/README.desktop' ]; then
-        url=$(cat /opt/aeacus/README.desktop | grep -oP 'https?://[^"]+')
+    if [ -e '/opt/aeacus/assets/ReadMe.html' ]; then
+        cat /opt/aeacus/assets/ReadMe.html > ./res/readme.html
     fi
 
     #put list of authorized standard users into ./res/authed_standard_users.txt
-    curl $url > ./res/readme.html
     awk '/<b>Authorized Users:<\/b>/,/<\/pre>/' ./res/readme.html | grep -oP '^\s*\w+' > './res/authed_standard_users.txt'
 
     #put list of authorized admins into ./res/authed_admins.txt
-    awk ' BEGIN { capture = 0; } /Authorized Administrators/ { capture = 1; next; } /<b>Authorized Users:<\/b>/ { capture = 0; } capture && /^[[:alpha:]]/ { sub(/ \(you\)/, ""); print $1; } ' ./res/readme.html > ./res/authed_admins.txt
+    awk '/<b>Authorized Administrators:/,/^$/ { if ($1 ~ /^[A-Za-z]+$/) print $1 }' ./res/readme.html/authed_admins.txt
 
     #put list of all authorized users into ./res/authed_users.txt
     cat ./res/authed_standard_users.txt ./res/authed_admins.txt > ./res/authed_users.txt
@@ -23,7 +23,7 @@ function userAudit(){
 
 
     while read -r user; do
-        grep $user ./res/authed_admins
+        grep $user ./res/authed_admins.txt
         if [ $? -eq 1 ]; then
             deluser $user adm
             deluser $user sudo
@@ -41,9 +41,11 @@ function userAudit(){
             userdel -f $user
         fi
 
-        echo -e "Cyb3rP@triot1234!\nCyb3rP@triot1234!" | passwd $user
+        cat "$user: Cyb3rP@triot1234!\n" > ./res/passwords.txt
 
     done < ./res/all_users.txt
+    
+    chpasswd < ./res/passwords.txt
 }
 
 userAudit
