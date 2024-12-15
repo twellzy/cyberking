@@ -45,7 +45,7 @@ function userAudit(){
 
     done < ./res/all_users.txt
 
-    chpasswd < ./res/passwords.txt
+    #chpasswd < ./res/passwords.txt
 }
 
 
@@ -150,6 +150,9 @@ function removeBadPackages(){
 function disableBadServices(){
     systemctl stop smtp
     systemctl disable smtp
+
+    systemctl stop popa3d
+    systemctl disable popa3d
 }
 
 
@@ -252,6 +255,29 @@ function securePAM(){
 
 
 
+function secureLightDM(){
+    if [ -e /etc/lightdm/lightdm ]; then
+        cp /etc/lightdm/lightdm /etc/lightdm/lightdm.bak
+        cp ./configs/lightDM/lightdm.conf /etc/lightdm/lightdm
+    fi
+}
+
+
+
+function secureGDM3(){
+    cp /etc/gdm3/custom.conf /etc/gdm3/custom.conf.bak
+    cp ./configs/gdm3/gdm3 /etc/gdm3/custom.conf
+}
+
+
+
+function startAudits(){
+    cp /etc/audit/audit.rules /etc/audit/audit.rules.bak
+    cp ./configs/audit/audit.rules /etc/audit/audit.rules
+}
+
+
+
 function disableRootLogin(){
     passwd -l root
 }
@@ -272,6 +298,7 @@ enableUFW
 
 echo "[+] Disabling bad services"
 disableBadServices
+
 
 read -p "Is SSH a critical service (Y/N)" action
 if [ $action = 'y' -o $action = 'Y' ]; then
@@ -321,3 +348,12 @@ securePAM
 
 echo "[+] Disabling root login"
 disableRootLogin
+
+echo "[+] Securing Lightdm"
+secureLightDM
+
+echo "[+] Securing gdm3"
+secureGDM3
+
+echo "[+] Configuring audit"
+startAudits
