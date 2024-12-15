@@ -13,23 +13,24 @@ function userAudit(){
     awk '/<b>Authorized Users:<\/b>/,/<\/pre>/' ./res/readme.html | grep -oP '^\s*\w+' > './res/authed_standard_users.txt'
 
     #put list of authorized admins into ./res/authed_admins.txt
-    awk '/<b>Authorized Administrators:/,/^$/ { if ($1 ~ /^[A-Za-z]+$/) print $1 }' ./res/readme.html/authed_admins.txt
+    awk '/<b>Authorized Administrators:/,/^$/ { if ($1 ~ /^[A-Za-z]+$/) print $1 }' ./res/readme.html > ./res/authed_admins.txt
 
     #put list of all authorized users into ./res/authed_users.txt
     cat ./res/authed_standard_users.txt ./res/authed_admins.txt > ./res/authed_users.txt
 
     #put list of all users authorized or not into ./res/all_users.txt
-    getent passwd | awk -F: '($3 >= 1000 && $3 < 3000) { print $1 }' > './res/all_users.txt'
+    getent passwd | awk -F: '($3 == 0 && $1 != "root") || ($3 >= 1000 && $3 < 3000) { print $1 }' > './res/all_users.txt'
+
 
 
     while read -r user; do
-        grep $user ./res/authed_admins.txt
+        grep $user ./res/authed_admins.txt > /dev/null
         if [ $? -eq 1 ]; then
             deluser $user adm
             deluser $user sudo
         fi
 
-        grep $user ./res/authed_users.txt
+        grep $user ./res/authed_users.txt > /dev/null
         if [ $? -eq 1 ]; then
             #remove user's cronjobs
             crontab -u $user -r
@@ -39,12 +40,13 @@ function userAudit(){
 
             #delete the user
             userdel -f $user
+            
+        else
+            echo -e "$user: Cyb3rP@triot1234!" >> ./res/passwords.txt
         fi
 
-        cat "$user: Cyb3rP@triot1234!\n" > ./res/passwords.txt
-
     done < ./res/all_users.txt
-    
+
     chpasswd < ./res/passwords.txt
 }
 
