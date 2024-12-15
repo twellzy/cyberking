@@ -284,6 +284,37 @@ function disableRootLogin(){
 
 
 
+function secureSysctl(){
+    cp /etc/sysctl.d/10-console-messages.conf /etc/sysctl.d/10-console-messages.conf.bak
+    cp ./configs/sysctl/10-console-messages.conf /etc/sysctl.d/10-console-messages.conf
+
+    cp /etc/sysctl.d/10-ipv6-privacy.conf /etc/sysctl.d/10-ipv6-privacy.conf.bak
+    cp ./configs/sysctl/10-ipv6-privacy.conf /etc/sysctl.d/10-ipv6-privacy.conf
+
+    cp /etc/sysctl.d/10-kernel-hardening.conf /etc/sysctl.d/10-kernel-hardening.conf.bak
+    cp ./configs/sysctl/10-kernel-hardening.conf /etc/sysctl.d/10-kernel-hardening.conf
+
+    cp /etc/sysctl.d/10-link-restrictions.conf /etc/sysctl.d/10-link-restrictions.conf.bak
+    cp ./configs/sysctl/10-link-restrictions.conf /etc/sysctl.d/10-link-restrictions.conf
+
+    cp /etc/sysctl.d/10-magic-sysrq.conf /etc/sysctl.d/10-magic-sysrq.conf.bak
+    cp ./configs/sysctl/10-magic-sysrq.conf /etc/sysctl.d/10-magic-sysrq.conf
+
+    cp /etc/sysctl.d/10-network-security.conf /etc/sysctl.d/10-network-security.conf.bak
+    cp ./configs/sysctl/10-network-security.conf /etc/sysctl.d/10-network-security.conf
+
+    cp /etc/sysctl.d/10-ptrace.conf /etc/sysctl.d/10-ptrace.conf.bak
+    cp ./configs/sysctl/10-ptrace.conf /etc/sysctl.d/10-ptrace.conf
+
+    cp /etc/sysctl.d/10-zeropage.conf /etc/sysctl.d/10-zeropage.conf.bak
+    cp ./configs/sysctl/10-zeropage.conf /etc/sysctl.d/10-zeropage.conf
+    
+    cp /etc/sysctl.d/99-sysctl.conf /etc/sysctl.d/99-sysctl.conf.bak
+    cp ./configs/sysctl/99-sysctl.conf /etc/sysctl.d/99-sysctl.conf
+}
+
+
+
 echo "[+] Auditing Users"
 userAudit
 
@@ -357,3 +388,6 @@ secureGDM3
 
 echo "[+] Configuring audit"
 startAudits
+
+echo "[+] Securing sysctl.d"
+secureSysctl
