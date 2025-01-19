@@ -315,7 +315,7 @@ function secureSysctl(){
     cp ./configs/sysctl/99-sysctl.conf /etc/sysctl.d/99-sysctl.conf
 
     cp /etc/sysctl.conf /etc/sysctl.conf.bak
-    cp ./configs/sysctl/sysctl.conf
+    cp ./configs/sysctl/sysctl.conf /etc/sysctl.conf
 }
 
 
