@@ -1,6 +1,7 @@
 function userAudit(){
     #check which scoring engine is used
     if [ -e '/opt/CyberPatriot/README.desktop' ]; then
+        apt install curl
         url=$(cat /opt/CyberPatriot/README.desktop | grep -oP 'https?://[^"]+')
         curl $url > ./res/readme.html
     fi
@@ -122,6 +123,7 @@ function removeBadPackages(){
     apt-get purge --auto-remove cmospwd -y -qq
     apt-get purge --auto-remove fcrackzip -y -qq
     apt-get purge --auto-remove freeciv -qq
+    apt-get purge --auto-remove freecivserver -qq
     apt-get purge --auto-remove nmap -qq
     apt-get purge --auto-remove tcpspray -qq
     apt-get purge --auto-remove dsniff -qq
@@ -311,6 +313,9 @@ function secureSysctl(){
     
     cp /etc/sysctl.d/99-sysctl.conf /etc/sysctl.d/99-sysctl.conf.bak
     cp ./configs/sysctl/99-sysctl.conf /etc/sysctl.d/99-sysctl.conf
+
+    cp /etc/sysctl.conf /etc/sysctl.conf.bak
+    cp ./configs/sysctl/sysctl.conf
 }
 
 
@@ -374,11 +379,11 @@ else
 fi
 
 
-echo "[+] Securing PAM"
-securePAM
-
 echo "[+] Disabling root login"
 disableRootLogin
+
+echo "[+] Securing PAM"
+securePAM
 
 echo "[+] Securing Lightdm"
 secureLightDM
